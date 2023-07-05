@@ -38,7 +38,7 @@ LiquidCrystal lcd(4,3,5,6,7,8);
 ~~~
 
 # Setup y loop
-
+### En el setup inicio tanto los componentes que se van a usar como los pines para los leds. El loop se encarga de medir las temperaturas y llamar a funcion detectarBoton y mostrarLCD validando en que paso del programa estamos.
 ~~~c
 oid setup() {
   Serial.begin(9600);
@@ -69,4 +69,86 @@ void loop() {
   	
 }
 ~~~
-### En el setup inicio tanto los componentes que se van a usar como los pines para los leds. El loop se encarga de medir las temperaturas y llamar a funcion detectarBoton y mostrarLCD validando en que paso del programa estamos
+
+### detectarBoton se encarga de detectar las señales IR del control remoto e interactuar con el, si se apreta el boton 1 se hace otoño, con el 2 se hace invierno, con el 3 se hace primavera, con el 4 se hace verano y con el boton apagar se apaga y prende el sistema.
+~~~c
+void detectarBoton(String* estacion,bool* flagInicio,int* temperatura,bool* flagApagado){
+  
+  Serial.println(IrReceiver.decodedIRData.decodedRawData);
+  
+  if(IrReceiver.decode() && flagInicio)
+  {
+    
+    if (IrReceiver.decodedIRData.decodedRawData == OTONIO)
+    {	
+      *temperatura = 12;
+      
+      }
+    if (IrReceiver.decodedIRData.decodedRawData == INVIERNO)
+    {
+      	*temperatura = 5;
+      	     
+    }
+    if (IrReceiver.decodedIRData.decodedRawData == PRIMAVERA)
+    {
+      	*temperatura = 20;
+      	
+      	      	
+    }
+    if (IrReceiver.decodedIRData.decodedRawData == VERANO)
+    {	
+      	*temperatura = 25;
+      	
+           	
+    }
+    if (IrReceiver.decodedIRData.decodedRawData == APAGAR)
+    {	
+      
+      if (*flagApagado){
+      	*flagInicio = true;
+        *flagApagado = false;
+        
+      }else
+      {
+      	*flagInicio = false;
+      	*flagApagado = true;
+        
+      }
+      	
+    }
+    IrReceiver.resume();
+  } 	 
+}
+
+
+~~~
+
+
+### MostrarLCD detecta si las temperaturas son menores a 60 grados celcius, si ese es el caso se mostrara la estacion y la temperatura, caso contrario mostrara un mensaje de alerta en el LCD
+~~~c
+void mostrarLCD(int temperatura,String* estacion)
+{
+  String mensajeLCD;
+  conseguirEstacion(estacion,temperatura);
+  if (temperatura >= 60)
+  {
+    flagIncendio = true;
+    mensajeLCD = "ALERTA T: "+ String(temperatura) + "C";
+    lcd.print(mensajeLCD);
+    moverServo();
+    digitalWrite(ROJO,HIGH);
+    digitalWrite(VERDE,LOW);
+    
+  }
+  else
+  {
+    mensajeLCD = *estacion + " "+ String(temperatura) + "C";
+    lcd.print(mensajeLCD);
+    digitalWrite(ROJO,LOW);
+    digitalWrite(VERDE,HIGH);
+  }
+}
+
+~~~
+## Link al proyecto
+<[Thinkercad](https://www.tinkercad.com/things/e4s5Br0xbEV)>
